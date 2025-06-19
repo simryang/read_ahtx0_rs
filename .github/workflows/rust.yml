@@ -1,17 +1,21 @@
-# .github/workflows/ci.yml
-name: Rust CI
+name: CI & Release
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'         # v0.1.0, v1.2.3 등 태그 푸시 시 릴리즈
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build-linux:
     name: Build on Linux
     runs-on: ubuntu-latest
-
+    # 브랜치 푸시/PR에서는 이 잡만 실행
+    if: github.event_name != 'push' || github.ref_type != 'tag'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -22,19 +26,21 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Build (debug)
+      - name: Debug build
         run: cargo build
 
-      - name: Build (release)
+      - name: Release build
         run: cargo build --release
 
       - name: List artifacts
         run: ls -l target/{debug,release}
 
-  build-windows:
-    name: Build on Windows
-    runs-on: windows-latest
-
+  release:
+    name: Create GitHub Release
+    needs: build-linux
+    runs-on: ubuntu-latest
+    # 태그 푸시일 때만 실행
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -45,12 +51,38 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Build (debug)
-        run: cargo build
-
-      - name: Build (release)
+      - name: Build release artifacts
         run: cargo build --release
 
-      - name: List artifacts
-        shell: bash
-        run: ls -l target/release
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload shared library (.so)
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/release/libread_ahtx0_rs.so
+          asset_name: libread_ahtx0_rs.so
+          asset_content_type: application/octet-stream
+
+      - name: Upload versioned symlink (.so.${{ github.ref_name }})
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/release/libread_ahtx0_rs.so.${{ github.ref_name }}
+          asset_name: libread_ahtx0_rs.so.${{ github.ref_name }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload CLI binary
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/release/read_ahtx0_cli
+          asset_name: read_ahtx0_cli
+          asset_content_type: application/octet-stream
