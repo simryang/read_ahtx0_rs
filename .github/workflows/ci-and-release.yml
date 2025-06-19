@@ -4,7 +4,8 @@ name: CI & Release
 on:
   push:
     branches: [ main ]
-    tags:     [ 'v*.*.*' ]     # v0.1.0, v1.2.3 등
+    # tags:     [ 'v*.*.*' ]     # v0.1.0, v1.2.3 등
+    tags:     [ 'v*' ]     # v* 으로 완화
   pull_request:
     branches: [ main ]
 
