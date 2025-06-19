@@ -7,9 +7,8 @@ on:
   pull_request:
     branches: [ main ]
 
-# ① Release 생성 권한 허용
 permissions:
-  contents: write
+  contents: write    # allow release creation
 
 jobs:
   build-linux:
@@ -18,7 +17,7 @@ jobs:
     if: github.event_name != 'push' || github.ref_type != 'tag'
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Rust toolchain
+      - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
@@ -32,7 +31,7 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Rust toolchain
+      - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
@@ -42,9 +41,9 @@ jobs:
 
       - id: create_release
         uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # ← must be here
         with:
-          # ② token은 반드시 with 블록 최상단에
-          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name:      ${{ github.ref_name }}
           release_name:  Release ${{ github.ref_name }}
           draft:         false
