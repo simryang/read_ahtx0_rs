@@ -1,0 +1,19 @@
+[package]
+name = "read_ahtx0_rs"
+version = "0.1.0"
+edition = "2025"
+
+# 공유 라이브러리(.so) 설정을 정의합니다.
+[lib]
+name = "read_ahtx0_rs"
+crate-type = ["cdylib", "rlib"] # C-style Dynamic Library
+
+# 단독 실행 파일 설정을 정의합니다.
+[[bin]]
+name = "read_ahtx0_cli" # 실행 파일의 이름
+path = "src/main.rs"    # 실행 파일의 소스 코드 경로
+
+[dependencies]
+embedded-hal = "1.0.0"
+linux-embedded-hal = "0.4.0"
+thiserror = "1.0"
