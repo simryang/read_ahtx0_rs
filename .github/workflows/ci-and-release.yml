@@ -1,30 +1,29 @@
+# .github/workflows/ci-and-release.yml
 name: CI & Release
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - 'v*.*.*'         # v0.1.0, v1.2.3 등
+    branches: [ main ]
+    # tags:     [ 'v*.*.*' ]     # v0.1.0, v1.2.3 등
+    tags:     [ 'v*' ]     # v* 으로 완화
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build-linux:
-    name: Build on Linux
+    name: 🛠️ Build on Linux
     runs-on: ubuntu-latest
-    # 태그(push tag) 이벤트일 땐 건너뜁니다
+    # 브랜치 푸시/PR일 때만 실행
     if: github.event_name != 'push' || github.ref_type != 'tag'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
+          # 기본값이 'stable' 이므로 생략 가능
           toolchain: stable
-          override: true
 
       - name: Debug build
         run: cargo build
@@ -32,38 +31,11 @@ jobs:
       - name: Release build
         run: cargo build --release
 
-      - name: List artifacts
+      - name: List build artifacts
         run: ls -l target/{debug,release}
 
-  build-windows:
-    name: Build on Windows
-    runs-on: windows-latest
-    if: github.event_name != 'push' || github.ref_type != 'tag'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      - name: Debug build
-        run: cargo build
-
-      - name: Release build
-        run: cargo build --release
-
-      - name: List artifacts
-        shell: bash
-        run: ls -l target/release
-
   release:
-    name: Create GitHub Release
-    needs:
-      - build-linux
-      - build-windows
+    name: 🚀 Create GitHub Release
     runs-on: ubuntu-latest
     # 오직 태그 푸시일 때만 실행
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
@@ -71,13 +43,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          override: true
 
-      - name: Release build
+      - name: Build release artifacts
         run: cargo build --release
 
       - name: Create GitHub Release
