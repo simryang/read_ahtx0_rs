@@ -1,7 +1,8 @@
 [package]
 name = "read_ahtx0_rs"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
+build = "build.rs" # 빌드 스크립트 경로
 
 # 공유 라이브러리(.so) 설정을 정의합니다.
 [lib]
