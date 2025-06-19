@@ -1,7 +1,5 @@
 // build.rs
 
-// build.rs
-
 use std::{env, fs};
 use std::os::unix::fs::symlink;
 use std::path::Path;
